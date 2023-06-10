@@ -39,9 +39,8 @@ namespace SessionUsersDetails
         [HarmonyPatch(nameof(SessionUserController.Create))]
         private static bool CreatePrefix(out SessionUserController __result, User user, UIBuilder ui)
         {
-            ui.Style.MinHeight = SessionUserController.HEIGHT;
-            //var rectTransform = ui.Panel();
-            var horizontal = ui.HorizontalLayout(4, 0, Alignment.MiddleCenter);
+            ui.Style.MinHeight = SessionUserController.HEIGHT + 8;
+            var horizontal = ui.HorizontalLayout(4, 4, Alignment.MiddleCenter);
             horizontal.ForceExpandHeight.Value = false;
             horizontal.ForceExpandWidth.Value = false;
 
@@ -52,21 +51,49 @@ namespace SessionUsersDetails
             var extraData = controllerExtraData.GetOrCreateValue(controller);
             var badgeFont = controller.GetBadgeFontCollection();
 
-            ui.Style.MinWidth = 0.8f * SessionUserController.HEIGHT;
+            extraData.RowBackgroundImage = horizontal.Slot.AttachComponent<Image>();
+            extraData.RowBackgroundImage.Tint.Value = (horizontal.Slot.ChildIndex & 1) == 0 ?
+                SessionUsersDetails.FirstRowColor : SessionUsersDetails.SecondRowColor;
 
-            ui.Text(user.IsHost ? "<sprite name=\"host\">" : "", alignment: Alignment.MiddleCenter).Font.Target = badgeFont;
+            ui.Style.MinHeight = (user.IsHost ? 0.8f : 1) * SessionUserController.HEIGHT;
+            ui.Style.MinWidth = 3f * SessionUserController.HEIGHT;
 
+            ui.Panel();
+            extraData.QueuedMessagesLabel = ui.Text(user.IsHost ? "<sprite name=\"host\">" : GetUserQueuedMessages(user), alignment: Alignment.MiddleCenter);
+            extraData.QueuedMessagesLabel.Font.Target = badgeFont;
+            extraData.QueuedMessagesLabel.Color.Value = color.Red.SetValue(.7f);
+            ui.NestOut();
+
+            ui.Style.MinWidth = 1.5f * SessionUserController.HEIGHT;
+            ui.Style.MinHeight = 0.8f * SessionUserController.HEIGHT;
+
+            ui.Panel();
             extraData.DeviceLabel = ui.Text(GetUserDeviceLabel(user), alignment: Alignment.MiddleCenter);
             extraData.DeviceLabel.Font.Target = badgeFont;
+            extraData.DeviceLabel.Color.Value = color.Red.SetValue(.7f);
+            ui.NestOut();
 
+            ui.Style.MinWidth = -1;
             ui.Style.FlexibleWidth = 1;
+            ui.Style.MinHeight = SessionUserController.HEIGHT;
+            ui.Panel();
             controller._name.Target = ui.Text(controller._cachedUserName, alignment: Alignment.MiddleLeft);
-            ui.Style.FlexibleWidth = -1;
+            ui.NestOut();
 
             ui.Style.MinWidth = 256;
-            controller._slider.Target = ui.Slider(SessionUserController.HEIGHT, 0f, 0f, 2f);
+            ui.Style.FlexibleWidth = -1;
+            ui.Style.MinHeight = 0.8f * SessionUserController.HEIGHT;
+
+            ui.Panel();
+            extraData.BadgesLabel = ui.Text("", alignment: Alignment.MiddleLeft);
+            extraData.BadgesLabel.Font.Target = badgeFont;
+            ui.NestOut();
+
+            ui.Style.MinHeight = SessionUserController.HEIGHT;
+            controller._slider.Target = ui.Slider(SessionUserController.HEIGHT, 1f, 0f, 2f);
             controller._slider.Target.BaseColor.Value = GetUserVoiceModeColor(user);
 
+            ui.Style.MinHeight = SessionUserController.HEIGHT;
             var colorDrive = controller._slider.Target.ColorDrivers[0];
             colorDrive.TintColorMode.Value = InteractionElement.ColorMode.Explicit;
             colorDrive.NormalColor.Value = color.LightGray;
@@ -74,23 +101,29 @@ namespace SessionUsersDetails
             colorDrive.PressColor.Value = color.Gray;
             colorDrive.DisabledColor.Value = color.DarkGray;
 
-            ui.Style.MinWidth = 32;
+            ui.Style.MinWidth = SessionUserController.HEIGHT;
+            var voiceModeButton = ui.Button(GetUserVoiceModeLabel(user));
+            voiceModeButton.BaseColor.Value = new color(1, 0);
+            voiceModeButton.LocalPressed += (button, eventData) =>
+            {
+                if (!controller.IsDestroyed)
+                    controller._slider.Target.Value.Value = 1;
+            };
 
-            extraData.VoiceModeLabel = ui.Text(GetUserVoiceModeLabel(user), alignment: Alignment.MiddleLeft);
+            extraData.VoiceModeLabel = voiceModeButton.Slot.GetComponentInChildren<Text>();
             extraData.VoiceModeLabel.Font.Target = badgeFont;
 
-            ui.Style.MinWidth = 96;
-
+            ui.Style.MinWidth = 64;
+            ui.Style.MinHeight = SessionUserController.HEIGHT;
             controller._mute.Target = ui.Button("User.Actions.Mute".AsLocaleKey(), controller.OnMute);
-
             controller._jump.Target = ui.Button("User.Actions.Jump".AsLocaleKey(), controller.OnJump);
 
+            ui.Style.MinWidth = 96;
             controller._respawn.Target = ui.Button("User.Actions.Respawn".AsLocaleKey(), controller.OnRespawn);
-
             controller._silence.Target = ui.Button("User.Actions.Silence".AsLocaleKey(), controller.OnSilence);
 
+            ui.Style.MinWidth = 64;
             controller._kick.Target = ui.Button("User.Actions.Kick".AsLocaleKey(), controller.OnKick);
-
             controller._ban.Target = ui.Button("User.Actions.Ban".AsLocaleKey(), controller.OnBan);
 
             ui.NestOut();
@@ -114,6 +147,43 @@ namespace SessionUsersDetails
             }
 
             __result = controller;
+            return false;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(nameof(SessionUserController.AddBadge), new[] { typeof(string) })]
+        private static bool AddStandardBadgePrefix(SessionUserController __instance, string spriteName)
+        {
+            if (!controllerExtraData.TryGetValue(__instance, out var extraData) || extraData == null)
+                return false;
+
+            if (SessionUsersDetails.HidePatreonBadge && spriteName == "patreon")
+                return false;
+
+            var text = extraData.BadgesLabel.Content;
+
+            if (text.Value.Length > 0)
+                text.Value += " ";
+
+            text.Value += $"<sprite name=\"{spriteName}\">";
+
+            return false;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(nameof(SessionUserController.AddBadge), new[] { typeof(Uri), typeof(string), typeof(bool) })]
+        private static bool AddCustomBadgePrefix(SessionUserController __instance, Uri badge, string key)
+        {
+            var spriteFont = (DynamicSpriteFont)__instance.GetBadgeFontCollection().FontSets[1];
+
+            if (!spriteFont.HasSprite(key))
+                spriteFont.AddSprite(key, badge, 1.25f);
+
+            if (SessionUsersDetails.HideCustomBadges)
+                return false;
+
+            AddStandardBadgePrefix(__instance, key);
+
             return false;
         }
 
@@ -144,6 +214,9 @@ namespace SessionUsersDetails
         }
 
         private static string GetUserDeviceLabel(User user)
+            => (user.VR_Active && user.HeadDevice != HeadOutputDevice.Headless && !user.IsPresentInHeadset) ? $"<s>{GetUserDevice(user)}" : GetUserDevice(user);
+
+        private static string GetUserDevice(User user)
         {
             if (user.HeadDevice == HeadOutputDevice.Headless)
                 return headlessSprite;
@@ -171,6 +244,9 @@ namespace SessionUsersDetails
         private static color GetUserVoiceModeColor(User user)
             => VoiceHelper.GetColor(GetUserVoiceMode(user)).SetSaturation(.5f);
 
+        private static string GetUserQueuedMessages(User user)
+            => user.QueuedMessages > 10 ? $"{user.QueuedMessages} Q'd" : "";
+
         [HarmonyPostfix]
         [HarmonyPatch("OnCommonUpdate")]
         private static void OnCommonUpdatePostfix(SessionUserController __instance)
@@ -178,12 +254,18 @@ namespace SessionUsersDetails
             if (!controllerExtraData.TryGetValue(__instance, out var extraData) || extraData == null)
                 return;
 
+            extraData.RowBackgroundImage.Tint.Value = (__instance.Slot.ChildIndex & 1) == 0 ?
+                SessionUsersDetails.FirstRowColor : SessionUsersDetails.SecondRowColor;
+
             var user = __instance.TargetUser;
 
             extraData.DeviceLabel.Content.Value = GetUserDeviceLabel(user);
 
             extraData.VoiceModeLabel.Content.Value = GetUserVoiceModeLabel(user);
             __instance._slider.Target.BaseColor.Value = GetUserVoiceModeColor(user);
+
+            if (!user.IsHost)
+                extraData.QueuedMessagesLabel.Content.Value = GetUserQueuedMessages(user);
         }
     }
 }

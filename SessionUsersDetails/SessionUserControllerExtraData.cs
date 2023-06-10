@@ -9,7 +9,13 @@ namespace SessionUsersDetails
 {
     internal class SessionUserControllerExtraData
     {
+        public Text BadgesLabel { get; set; }
+
         public Text DeviceLabel { get; set; }
+
+        public Text QueuedMessagesLabel { get; set; }
+
+        public Image RowBackgroundImage { get; set; }
 
         public Text VoiceModeLabel { get; set; }
     }
