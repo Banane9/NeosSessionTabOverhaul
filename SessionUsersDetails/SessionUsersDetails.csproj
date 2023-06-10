@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -41,12 +42,15 @@
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\NeosVR\Neos_Data\Managed\BaseX.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="CloudX.Shared">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\NeosVR\Neos_Data\Managed\CloudX.Shared.dll</HintPath>
+    </Reference>
     <Reference Include="CodeX">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\NeosVR\Neos_Data\Managed\CodeX.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="FrooxEngine">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\NeosVR\Neos_Data\Managed\FrooxEngine.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\NeosVR\Neos_Data\Managed\Public\FrooxEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="NeosModLoader">
@@ -54,8 +58,12 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ValueTuple" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SessionControlDialogPatches.cs" />
+    <Compile Include="SessionUserControllerExtraData.cs" />
+    <Compile Include="SessionUserControllerPatches.cs" />
     <Compile Include="SessionUsersDetails.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
