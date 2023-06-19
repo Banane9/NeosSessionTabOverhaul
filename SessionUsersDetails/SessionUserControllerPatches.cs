@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using BaseX;
+using System.Diagnostics;
 
 #if true
 // Disable CodeMaid Cleanup
@@ -33,6 +34,9 @@ namespace SessionUsersDetails
         private const string shoutSprite = $"<sprite name=\"{nameof(VoiceMode.Shout)}\">";
         private const string broadcastSprite = $"<sprite name=\"{nameof(VoiceMode.Broadcast)}\">";
 
+        private static readonly color hostColor = new(1, .678f, .169f);
+        private static readonly string queuedMessagesColor = color.Red.SetValue(.7f).ToHexString();
+
         private static readonly ConditionalWeakTable<SessionUserController, SessionUserControllerExtraData> controllerExtraData = new();
 
         [HarmonyPrefix]
@@ -55,13 +59,12 @@ namespace SessionUsersDetails
             extraData.RowBackgroundImage.Tint.Value = (horizontal.Slot.ChildIndex & 1) == 0 ?
                 SessionUsersDetails.FirstRowColor : SessionUsersDetails.SecondRowColor;
 
-            ui.Style.MinHeight = (user.IsHost ? 0.8f : 1) * SessionUserController.HEIGHT;
-            ui.Style.MinWidth = 3f * SessionUserController.HEIGHT;
+            ui.Style.MinHeight = SessionUserController.HEIGHT;
+            ui.Style.MinWidth = 2.5f * SessionUserController.HEIGHT;
 
             ui.Panel();
-            extraData.QueuedMessagesLabel = ui.Text(user.IsHost ? "<sprite name=\"host\">" : GetUserQueuedMessages(user), alignment: Alignment.MiddleCenter);
-            extraData.QueuedMessagesLabel.Font.Target = badgeFont;
-            extraData.QueuedMessagesLabel.Color.Value = color.Red.SetValue(.7f);
+            extraData.FPSOrQueuedMessagesLabel = ui.Text(GetUserFPSOrQueuedMessages(user), alignment: Alignment.MiddleCenter);
+            extraData.FPSOrQueuedMessagesLabel.Font.Target = badgeFont;
             ui.NestOut();
 
             ui.Style.MinWidth = 1.5f * SessionUserController.HEIGHT;
@@ -76,11 +79,22 @@ namespace SessionUsersDetails
             ui.Style.MinWidth = -1;
             ui.Style.FlexibleWidth = 1;
             ui.Style.MinHeight = SessionUserController.HEIGHT;
+
             ui.Panel();
             controller._name.Target = ui.Text(controller._cachedUserName, alignment: Alignment.MiddleLeft);
+
+            if (user.IsHost && SessionUsersDetails.ColorHostName)
+                controller._name.Target.Color.Value = hostColor;
+
+            if (user.UserID != null)
+            {
+                // In LocalHome or for anonymous users, there is no id
+                controller._name.Target.Slot.AttachComponent<Button>();
+                controller._name.Target.Slot.AttachComponent<FriendLink>().UserId.Value = user.UserID;
+            }
             ui.NestOut();
 
-            ui.Style.MinWidth = 256;
+            ui.Style.MinWidth = 224;
             ui.Style.FlexibleWidth = -1;
             ui.Style.MinHeight = 0.8f * SessionUserController.HEIGHT;
 
@@ -89,6 +103,7 @@ namespace SessionUsersDetails
             extraData.BadgesLabel.Font.Target = badgeFont;
             ui.NestOut();
 
+            ui.Style.MinWidth = 192;
             ui.Style.MinHeight = SessionUserController.HEIGHT;
             controller._slider.Target = ui.Slider(SessionUserController.HEIGHT, 1f, 0f, 2f);
             controller._slider.Target.BaseColor.Value = GetUserVoiceModeColor(user);
@@ -118,15 +133,42 @@ namespace SessionUsersDetails
             controller._mute.Target = ui.Button("User.Actions.Mute".AsLocaleKey(), controller.OnMute);
             controller._jump.Target = ui.Button("User.Actions.Jump".AsLocaleKey(), controller.OnJump);
 
-            ui.Style.MinWidth = 96;
+            extraData.BringButton = ui.Button("Bring");
+            extraData.BringButton.LocalPressed += (button, eventData) =>
+            {
+                if (controller.World != Userspace.UserspaceWorld)
+                    return;
+
+                user.World.RunSynchronously(() =>
+                {
+                    if (user.World.LocalUser.Root != null)
+                        user.Root?.JumpToPoint(user.World.LocalUser.Root.HeadPosition);
+                });
+            };
+
+            ui.Style.MinWidth = 80;
+            var steamButton = ui.Button("Steam");
+            steamButton.Enabled = false;
+            if (user.Metadata.TryGetElement("SteamID", out var value) && value.TryGetValue(out ulong steamID))
+            {
+                steamButton.Enabled = true;
+                steamButton.LocalPressed += (button, eventData) => Process.Start($"https://steamcommunity.com/profiles/{steamID}");
+            }
+
+            ui.Style.MinWidth = 108;
             controller._respawn.Target = ui.Button("User.Actions.Respawn".AsLocaleKey(), controller.OnRespawn);
+
+            ui.Style.MinWidth = 80;
             controller._silence.Target = ui.Button("User.Actions.Silence".AsLocaleKey(), controller.OnSilence);
 
-            ui.Style.MinWidth = 64;
+            ui.Style.MinWidth = 48;
             controller._kick.Target = ui.Button("User.Actions.Kick".AsLocaleKey(), controller.OnKick);
             controller._ban.Target = ui.Button("User.Actions.Ban".AsLocaleKey(), controller.OnBan);
 
             ui.NestOut();
+
+            if (user.IsHost)
+                controller.AddBadge("host");
 
             if (user.Platform.IsMobilePlatform())
                 controller.AddBadge("mobile");
@@ -244,8 +286,8 @@ namespace SessionUsersDetails
         private static color GetUserVoiceModeColor(User user)
             => VoiceHelper.GetColor(GetUserVoiceMode(user)).SetSaturation(.5f);
 
-        private static string GetUserQueuedMessages(User user)
-            => user.QueuedMessages > 10 ? $"{user.QueuedMessages} Q'd" : "";
+        private static string GetUserFPSOrQueuedMessages(User user)
+            => user.QueuedMessages > 10 ? $"<color={queuedMessagesColor}>{user.QueuedMessages} <size=60%>Q'd" : $"<color=#F0F0F0>{MathX.RoundToInt(user.FPS)} <size=60%>FPS";
 
         [HarmonyPostfix]
         [HarmonyPatch("OnCommonUpdate")]
@@ -259,13 +301,14 @@ namespace SessionUsersDetails
 
             var user = __instance.TargetUser;
 
+            extraData.FPSOrQueuedMessagesLabel.Content.Value = GetUserFPSOrQueuedMessages(user);
             extraData.DeviceLabel.Content.Value = GetUserDeviceLabel(user);
 
             extraData.VoiceModeLabel.Content.Value = GetUserVoiceModeLabel(user);
             __instance._slider.Target.BaseColor.Value = GetUserVoiceModeColor(user);
 
-            if (!user.IsHost)
-                extraData.QueuedMessagesLabel.Content.Value = GetUserQueuedMessages(user);
+            extraData.BringButton.Enabled = !(user.World.LocalUser.Root?.GetRegisteredComponent<LocomotionController>()?.IsSupressed).GetValueOrDefault()
+                                            && !user.IsLocalUser && user.CanRespawn();
         }
     }
 }

@@ -11,9 +11,11 @@ namespace SessionUsersDetails
     {
         public Text BadgesLabel { get; set; }
 
+        public Button BringButton { get; set; }
+
         public Text DeviceLabel { get; set; }
 
-        public Text QueuedMessagesLabel { get; set; }
+        public Text FPSOrQueuedMessagesLabel { get; set; }
 
         public Image RowBackgroundImage { get; set; }
 

@@ -31,6 +31,9 @@ namespace SessionUsersDetails
         private static readonly ModConfigurationKey<bool> HidePatreonBadgeKey = new("HidePatreonBadge", "Hide the Patreon Badge in the Session Users list.", () => false);
 
         [AutoRegisterConfigKey]
+        private static readonly ModConfigurationKey<bool> ColorHostNameKey = new("ColorHostName", "Color the Host's username like the host icon.", () => true);
+
+        [AutoRegisterConfigKey]
         private static readonly ModConfigurationKey<color> SecondRowColorKey = new("SecondRowColor", "Background color of the second row in the Session user lists.", () => new color(1, .15f));
 
         public override string Author => "Banane9";
@@ -43,6 +46,7 @@ namespace SessionUsersDetails
         internal static bool HidePatreonBadge => Config.GetValue(HidePatreonBadgeKey);
         internal static color SecondRowColor => Config.GetValue(SecondRowColorKey);
         internal static bool SpritesInjected { get; set; } = false;
+        internal static bool ColorHostName => Config.GetValue(ColorHostNameKey);
 
         public override void OnEngineInit()
         {

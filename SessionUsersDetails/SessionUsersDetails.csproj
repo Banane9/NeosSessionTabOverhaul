@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="SessionControlDialogPatches.cs" />
+    <Compile Include="SessionPermissionControllerPatches.cs" />
     <Compile Include="SessionUserControllerExtraData.cs" />
     <Compile Include="SessionUserControllerPatches.cs" />
     <Compile Include="SessionUsersDetails.cs" />
