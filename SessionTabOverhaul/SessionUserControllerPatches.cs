@@ -14,7 +14,7 @@ using System.Diagnostics;
 // Disable CodeMaid Cleanup
 #endif
 
-namespace SessionUsersDetails
+namespace SessionTabOverhaul
 {
     [HarmonyPatch(typeof(SessionUserController))]
     internal static class SessionUserControllerPatches
@@ -57,7 +57,7 @@ namespace SessionUsersDetails
 
             extraData.RowBackgroundImage = horizontal.Slot.AttachComponent<Image>();
             extraData.RowBackgroundImage.Tint.Value = (horizontal.Slot.ChildIndex & 1) == 0 ?
-                SessionUsersDetails.FirstRowColor : SessionUsersDetails.SecondRowColor;
+                SessionTabOverhaul.FirstRowColor : SessionTabOverhaul.SecondRowColor;
 
             ui.Style.MinHeight = SessionUserController.HEIGHT;
             ui.Style.MinWidth = 2.5f * SessionUserController.HEIGHT;
@@ -83,7 +83,7 @@ namespace SessionUsersDetails
             ui.Panel();
             controller._name.Target = ui.Text(controller._cachedUserName, alignment: Alignment.MiddleLeft);
 
-            if (user.IsHost && SessionUsersDetails.ColorHostName)
+            if (user.IsHost && SessionTabOverhaul.ColorHostName)
                 controller._name.Target.Color.Value = hostColor;
 
             if (user.UserID != null)
@@ -199,7 +199,7 @@ namespace SessionUsersDetails
             if (!controllerExtraData.TryGetValue(__instance, out var extraData) || extraData == null)
                 return false;
 
-            if (SessionUsersDetails.HidePatreonBadge && spriteName == "patreon")
+            if (SessionTabOverhaul.HidePatreonBadge && spriteName == "patreon")
                 return false;
 
             var text = extraData.BadgesLabel.Content;
@@ -221,7 +221,7 @@ namespace SessionUsersDetails
             if (!spriteFont.HasSprite(key))
                 spriteFont.AddSprite(key, badge, 1.25f);
 
-            if (SessionUsersDetails.HideCustomBadges)
+            if (SessionTabOverhaul.HideCustomBadges)
                 return false;
 
             AddStandardBadgePrefix(__instance, key);
@@ -233,7 +233,7 @@ namespace SessionUsersDetails
         [HarmonyPatch(nameof(SessionUserController.GetBadgeFontCollection))]
         private static void GetBadgeFontCollectionPostfix(FontCollection __result)
         {
-            if (SessionUsersDetails.SpritesInjected)
+            if (SessionTabOverhaul.SpritesInjected)
                 return;
 
             var spriteFont = (DynamicSpriteFont)__result.FontSets[1];
@@ -252,7 +252,7 @@ namespace SessionUsersDetails
                     spriteFont.AddSprite(name, VoiceHelper.GetIcon(voiceMode));
             }
 
-            SessionUsersDetails.SpritesInjected = true;
+            SessionTabOverhaul.SpritesInjected = true;
         }
 
         private static string GetUserDeviceLabel(User user)
@@ -297,7 +297,7 @@ namespace SessionUsersDetails
                 return;
 
             extraData.RowBackgroundImage.Tint.Value = (__instance.Slot.ChildIndex & 1) == 0 ?
-                SessionUsersDetails.FirstRowColor : SessionUsersDetails.SecondRowColor;
+                SessionTabOverhaul.FirstRowColor : SessionTabOverhaul.SecondRowColor;
 
             var user = __instance.TargetUser;
 

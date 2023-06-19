@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SessionUsersDetails
+namespace SessionTabOverhaul
 {
     [HarmonyPatch(typeof(SessionControlDialog))]
     internal static class SessionControlDialogPatches
@@ -38,7 +38,7 @@ namespace SessionUsersDetails
                 }
 
                 var image = accessLevelRow.AttachComponent<Image>();
-                image.Tint.Value = (accessLevelRow.ChildIndex & 1) == 0 ? SessionUsersDetails.FirstRowColor : SessionUsersDetails.SecondRowColor;
+                image.Tint.Value = (accessLevelRow.ChildIndex & 1) == 0 ? SessionTabOverhaul.FirstRowColor : SessionTabOverhaul.SecondRowColor;
             }
         }
 

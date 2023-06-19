@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SessionUsersDetails")]
+[assembly: AssemblyTitle("SessionTabOverhaul")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Banane9")]
-[assembly: AssemblyProduct("SessionUsersDetails")]
+[assembly: AssemblyProduct("SessionTabOverhaul")]
 [assembly: AssemblyCopyright("Copyright © Banane9 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

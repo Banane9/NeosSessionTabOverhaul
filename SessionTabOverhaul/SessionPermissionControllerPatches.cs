@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SessionUsersDetails
+namespace SessionTabOverhaul
 {
     [HarmonyPatch(typeof(SessionPermissionController))]
     internal static class SessionPermissionControllerPatches
@@ -18,7 +18,7 @@ namespace SessionUsersDetails
         {
             var bgImage = __result.Slot.AttachComponent<Image>();
             bgImage.Tint.Value = (__result.Slot.ChildIndex & 1) == 0 ?
-                SessionUsersDetails.FirstRowColor : SessionUsersDetails.SecondRowColor;
+                SessionTabOverhaul.FirstRowColor : SessionTabOverhaul.SecondRowColor;
 
             __result.Slot.GetComponent<LayoutElement>().MinHeight.Value += 8;
 
@@ -34,7 +34,7 @@ namespace SessionUsersDetails
         private static void OnCommonUpdatePostfix(SessionPermissionController __instance)
         {
             __instance.Slot.GetComponent<Image>().Tint.Value = (__instance.Slot.ChildIndex & 1) == 0 ?
-                SessionUsersDetails.FirstRowColor : SessionUsersDetails.SecondRowColor;
+                SessionTabOverhaul.FirstRowColor : SessionTabOverhaul.SecondRowColor;
         }
     }
 }

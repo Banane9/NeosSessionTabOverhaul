@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SessionUsersDetails</RootNamespace>
-    <AssemblyName>SessionUsersDetails</AssemblyName>
+    <RootNamespace>SessionTabOverhaul</RootNamespace>
+    <AssemblyName>SessionTabOverhaul</AssemblyName>
     <LangVersion>latestMajor</LangVersion>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -65,7 +65,7 @@
     <Compile Include="SessionPermissionControllerPatches.cs" />
     <Compile Include="SessionUserControllerExtraData.cs" />
     <Compile Include="SessionUserControllerPatches.cs" />
-    <Compile Include="SessionUsersDetails.cs" />
+    <Compile Include="SessionTabOverhaul.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

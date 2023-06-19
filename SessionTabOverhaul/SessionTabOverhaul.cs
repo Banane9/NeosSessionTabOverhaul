@@ -15,11 +15,14 @@ using FrooxEngine.UIX;
 using HarmonyLib;
 using NeosModLoader;
 
-namespace SessionUsersDetails
+namespace SessionTabOverhaul
 {
-    public class SessionUsersDetails : NeosMod
+    public class SessionTabOverhaul : NeosMod
     {
         public static ModConfiguration Config;
+
+        [AutoRegisterConfigKey]
+        private static readonly ModConfigurationKey<bool> ColorHostNameKey = new("ColorHostName", "Color the Host's username like the host icon.", () => true);
 
         [AutoRegisterConfigKey]
         private static readonly ModConfigurationKey<color> FirstRowColorKey = new("FirstRowColor", "Background color of the first row in the Session user lists.", () => new color(0, .85f));
@@ -31,22 +34,19 @@ namespace SessionUsersDetails
         private static readonly ModConfigurationKey<bool> HidePatreonBadgeKey = new("HidePatreonBadge", "Hide the Patreon Badge in the Session Users list.", () => false);
 
         [AutoRegisterConfigKey]
-        private static readonly ModConfigurationKey<bool> ColorHostNameKey = new("ColorHostName", "Color the Host's username like the host icon.", () => true);
-
-        [AutoRegisterConfigKey]
         private static readonly ModConfigurationKey<color> SecondRowColorKey = new("SecondRowColor", "Background color of the second row in the Session user lists.", () => new color(1, .15f));
 
         public override string Author => "Banane9";
-        public override string Link => "https://github.com/Banane9/NeosSessionUsersDetails";
-        public override string Name => "SessionUsersDetails";
+        public override string Link => "https://github.com/Banane9/NeosSessionTabOverhaul";
+        public override string Name => "SessionTabOverhaul";
         public override string Version => "1.0.0";
 
+        internal static bool ColorHostName => Config.GetValue(ColorHostNameKey);
         internal static color FirstRowColor => Config.GetValue(FirstRowColorKey);
         internal static bool HideCustomBadges => Config.GetValue(HideCustomBadgesKey);
         internal static bool HidePatreonBadge => Config.GetValue(HidePatreonBadgeKey);
         internal static color SecondRowColor => Config.GetValue(SecondRowColorKey);
         internal static bool SpritesInjected { get; set; } = false;
-        internal static bool ColorHostName => Config.GetValue(ColorHostNameKey);
 
         public override void OnEngineInit()
         {
