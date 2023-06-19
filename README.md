@@ -10,6 +10,7 @@ Adds the following features to the Users list:
 * Host name can be tinted with the host icon's color
 * Clicking on a username will open the user in the contacts tab
 * Badges in a separate column
+* Custom badges can be hidden, leaving only "system" badges
 * Local volume slider handle colored according to voice mode
 * Voice mode icon (click to reset local volume to 100%)
 * Bring button as the opposite of Jump (requires respawn permission to use)
