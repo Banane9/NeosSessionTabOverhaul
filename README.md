@@ -1,7 +1,7 @@
 Session Tab Overhaul
 ===========================
 
-A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https://neos.com/) that overhauls the Session Tab of the Dash, most notably the Users list, by adding more details and options. 
+A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https://neos.com/) that overhauls the Session Tab of the Dash, most notably the Users list, by adding more (toggleable) details and options. 
 
 Adds the following features to the Users list:
 * Alternating background colors for the rows
@@ -10,7 +10,7 @@ Adds the following features to the Users list:
 * Host name can be tinted with the host icon's color
 * Clicking on a username will open the user in the contacts tab
 * Badges in a separate column
-* Custom badges can be hidden, leaving only "system" badges
+* Patreon badge, Custom badges (leaving only "system" badges), or badges in general can be hidden
 * Local volume slider handle colored according to voice mode
 * Voice mode icon (click to reset local volume to 100%)
 * Bring button as the opposite of Jump (requires respawn permission to use)

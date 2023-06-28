@@ -59,22 +59,28 @@ namespace SessionTabOverhaul
             extraData.RowBackgroundImage.Tint.Value = (horizontal.Slot.ChildIndex & 1) == 0 ?
                 SessionTabOverhaul.FirstRowColor : SessionTabOverhaul.SecondRowColor;
 
-            ui.Style.MinHeight = SessionUserController.HEIGHT;
-            ui.Style.MinWidth = 2.5f * SessionUserController.HEIGHT;
+            if (SessionTabOverhaul.ShowFPSOrQueuedMessages)
+            {
+                ui.Style.MinHeight = SessionUserController.HEIGHT;
+                ui.Style.MinWidth = 2.5f * SessionUserController.HEIGHT;
 
-            ui.Panel();
-            extraData.FPSOrQueuedMessagesLabel = ui.Text(GetUserFPSOrQueuedMessages(user), alignment: Alignment.MiddleCenter);
-            extraData.FPSOrQueuedMessagesLabel.Font.Target = badgeFont;
-            ui.NestOut();
+                ui.Panel();
+                extraData.FPSOrQueuedMessagesLabel = ui.Text(GetUserFPSOrQueuedMessages(user), alignment: Alignment.MiddleCenter);
+                extraData.FPSOrQueuedMessagesLabel.Font.Target = badgeFont;
+                ui.NestOut();
+            }
 
-            ui.Style.MinWidth = 1.5f * SessionUserController.HEIGHT;
-            ui.Style.MinHeight = 0.8f * SessionUserController.HEIGHT;
+            if (SessionTabOverhaul.ShowDeviceLabel)
+            {
+                ui.Style.MinWidth = 1.5f * SessionUserController.HEIGHT;
+                ui.Style.MinHeight = 0.8f * SessionUserController.HEIGHT;
 
-            ui.Panel();
-            extraData.DeviceLabel = ui.Text(GetUserDeviceLabel(user), alignment: Alignment.MiddleCenter);
-            extraData.DeviceLabel.Font.Target = badgeFont;
-            extraData.DeviceLabel.Color.Value = color.Red.SetValue(.7f);
-            ui.NestOut();
+                ui.Panel();
+                extraData.DeviceLabel = ui.Text(GetUserDeviceLabel(user), alignment: Alignment.MiddleCenter);
+                extraData.DeviceLabel.Font.Target = badgeFont;
+                extraData.DeviceLabel.Color.Value = color.Red.SetValue(.7f);
+                ui.NestOut();
+            }
 
             ui.Style.MinWidth = -1;
             ui.Style.FlexibleWidth = 1;
@@ -92,23 +98,26 @@ namespace SessionTabOverhaul
                 controller._name.Target.Slot.AttachComponent<Button>();
                 controller._name.Target.Slot.AttachComponent<FriendLink>().UserId.Value = user.UserID;
             }
-            ui.NestOut();
 
-            ui.Style.MinWidth = 224;
+            ui.NestOut();
             ui.Style.FlexibleWidth = -1;
-            ui.Style.MinHeight = 0.8f * SessionUserController.HEIGHT;
 
-            ui.Panel();
-            extraData.BadgesLabel = ui.Text("", alignment: Alignment.MiddleLeft);
-            extraData.BadgesLabel.Font.Target = badgeFont;
-            ui.NestOut();
+            if (!SessionTabOverhaul.HideAllBadges)
+            {
+                ui.Style.MinWidth = 224;
+                ui.Style.MinHeight = 0.8f * SessionUserController.HEIGHT;
+
+                ui.Panel();
+                extraData.BadgesLabel = ui.Text("", alignment: Alignment.MiddleLeft);
+                extraData.BadgesLabel.Font.Target = badgeFont;
+                ui.NestOut();
+            }
 
             ui.Style.MinWidth = 192;
             ui.Style.MinHeight = SessionUserController.HEIGHT;
             controller._slider.Target = ui.Slider(SessionUserController.HEIGHT, 1f, 0f, 2f);
             controller._slider.Target.BaseColor.Value = GetUserVoiceModeColor(user);
 
-            ui.Style.MinHeight = SessionUserController.HEIGHT;
             var colorDrive = controller._slider.Target.ColorDrivers[0];
             colorDrive.TintColorMode.Value = InteractionElement.ColorMode.Explicit;
             colorDrive.NormalColor.Value = color.LightGray;
@@ -116,43 +125,52 @@ namespace SessionTabOverhaul
             colorDrive.PressColor.Value = color.Gray;
             colorDrive.DisabledColor.Value = color.DarkGray;
 
-            ui.Style.MinWidth = SessionUserController.HEIGHT;
-            var voiceModeButton = ui.Button(GetUserVoiceModeLabel(user));
-            voiceModeButton.BaseColor.Value = new color(1, 0);
-            voiceModeButton.LocalPressed += (button, eventData) =>
+            if (SessionTabOverhaul.ShowVoiceMode)
             {
-                if (!controller.IsDestroyed)
-                    controller._slider.Target.Value.Value = 1;
-            };
+                ui.Style.MinWidth = SessionUserController.HEIGHT;
+                var voiceModeButton = ui.Button(GetUserVoiceModeLabel(user));
+                voiceModeButton.BaseColor.Value = new color(1, 0);
+                voiceModeButton.LocalPressed += (button, eventData) =>
+                {
+                    if (!controller.IsDestroyed)
+                        controller._slider.Target.Value.Value = 1;
+                };
 
-            extraData.VoiceModeLabel = voiceModeButton.Slot.GetComponentInChildren<Text>();
-            extraData.VoiceModeLabel.Font.Target = badgeFont;
+                extraData.VoiceModeLabel = voiceModeButton.Slot.GetComponentInChildren<Text>();
+                extraData.VoiceModeLabel.Font.Target = badgeFont;
+            }
 
             ui.Style.MinWidth = 64;
             ui.Style.MinHeight = SessionUserController.HEIGHT;
             controller._mute.Target = ui.Button("User.Actions.Mute".AsLocaleKey(), controller.OnMute);
             controller._jump.Target = ui.Button("User.Actions.Jump".AsLocaleKey(), controller.OnJump);
 
-            extraData.BringButton = ui.Button("Bring");
-            extraData.BringButton.LocalPressed += (button, eventData) =>
+            if (SessionTabOverhaul.ShowBringButton)
             {
-                if (controller.World != Userspace.UserspaceWorld)
-                    return;
-
-                user.World.RunSynchronously(() =>
+                extraData.BringButton = ui.Button("Bring");
+                extraData.BringButton.LocalPressed += (button, eventData) =>
                 {
-                    if (user.World.LocalUser.Root != null)
-                        user.Root?.JumpToPoint(user.World.LocalUser.Root.HeadPosition);
-                });
-            };
+                    if (controller.World != Userspace.UserspaceWorld)
+                        return;
 
-            ui.Style.MinWidth = 80;
-            var steamButton = ui.Button("Steam");
-            steamButton.Enabled = false;
-            if (user.Metadata.TryGetElement("SteamID", out var value) && value.TryGetValue(out ulong steamID))
+                    user.World.RunSynchronously(() =>
+                    {
+                        if (user.World.LocalUser.Root != null)
+                            user.Root?.JumpToPoint(user.World.LocalUser.Root.HeadPosition);
+                    });
+                };
+            }
+
+            if (SessionTabOverhaul.ShowSteamButton)
             {
-                steamButton.Enabled = true;
-                steamButton.LocalPressed += (button, eventData) => Process.Start($"https://steamcommunity.com/profiles/{steamID}");
+                ui.Style.MinWidth = 80;
+                var steamButton = ui.Button("Steam");
+                steamButton.Enabled = false;
+                if (user.Metadata.TryGetElement("SteamID", out var value) && value.TryGetValue(out ulong steamID))
+                {
+                    steamButton.Enabled = true;
+                    steamButton.LocalPressed += (button, eventData) => Process.Start($"https://steamcommunity.com/profiles/{steamID}");
+                }
             }
 
             ui.Style.MinWidth = 108;
@@ -196,7 +214,7 @@ namespace SessionTabOverhaul
         [HarmonyPatch(nameof(SessionUserController.AddBadge), new[] { typeof(string) })]
         private static bool AddStandardBadgePrefix(SessionUserController __instance, string spriteName)
         {
-            if (!controllerExtraData.TryGetValue(__instance, out var extraData) || extraData == null)
+            if (!controllerExtraData.TryGetValue(__instance, out var extraData) || extraData?.BadgesLabel == null)
                 return false;
 
             if (SessionTabOverhaul.HidePatreonBadge && spriteName == "patreon")
@@ -296,19 +314,26 @@ namespace SessionTabOverhaul
             if (!controllerExtraData.TryGetValue(__instance, out var extraData) || extraData == null)
                 return;
 
-            extraData.RowBackgroundImage.Tint.Value = (__instance.Slot.ChildIndex & 1) == 0 ?
-                SessionTabOverhaul.FirstRowColor : SessionTabOverhaul.SecondRowColor;
+            if (extraData.RowBackgroundImage != null)
+                extraData.RowBackgroundImage.Tint.Value = (__instance.Slot.ChildIndex & 1) == 0 ?
+                    SessionTabOverhaul.FirstRowColor : SessionTabOverhaul.SecondRowColor;
 
             var user = __instance.TargetUser;
 
-            extraData.FPSOrQueuedMessagesLabel.Content.Value = GetUserFPSOrQueuedMessages(user);
-            extraData.DeviceLabel.Content.Value = GetUserDeviceLabel(user);
+            if (extraData.FPSOrQueuedMessagesLabel != null)
+                extraData.FPSOrQueuedMessagesLabel.Content.Value = GetUserFPSOrQueuedMessages(user);
 
-            extraData.VoiceModeLabel.Content.Value = GetUserVoiceModeLabel(user);
+            if (extraData.DeviceLabel != null)
+                extraData.DeviceLabel.Content.Value = GetUserDeviceLabel(user);
+
             __instance._slider.Target.BaseColor.Value = GetUserVoiceModeColor(user);
 
-            extraData.BringButton.Enabled = !(user.World.LocalUser.Root?.GetRegisteredComponent<LocomotionController>()?.IsSupressed).GetValueOrDefault()
-                                            && !user.IsLocalUser && user.CanRespawn();
+            if (extraData.VoiceModeLabel != null)
+                extraData.VoiceModeLabel.Content.Value = GetUserVoiceModeLabel(user);
+
+            if (extraData.BringButton != null)
+                extraData.BringButton.Enabled = !(user.World.LocalUser.Root?.GetRegisteredComponent<LocomotionController>()?.IsSupressed).GetValueOrDefault()
+                                                && !user.IsLocalUser && user.CanRespawn();
         }
     }
 }
